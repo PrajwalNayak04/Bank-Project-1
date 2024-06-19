@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <script>
+        var customers = {
+            '1': { id: 1, fname: "John", lname: "Doe", email: "john@example.com", balance: 1000, rhistory: [] },
+            '2': { id: 2, fname: "Jane ", lname: "Smith", email: "jane@example.com", balance: 1500, rhistory: [] },
+            '3': { id: 3, fname: "Michael ", lname: "Johnson", email: "michael@example.com", balance: 2000, rhistory: [] },
+            '4': { id: 4, fname: "Emily ", lname: "Brown", email: "emily@example.com", balance: 1200, rhistory: [] },
+            '5': { id: 5, fname: "David ", lname: "Wilson", email: "david@example.com", balance: 1800, rhistory: [] },
+            '6': { id: 6, fname: "Sarah ", lname: "Martinez", email: "sarah@example.com", balance: 2500, rhistory: [] },
+            '7': { id: 7, fname: "Christopher ", lname: "Lee", email: "chris@example.com", balance: 1600, rhistory: [] },
+            '8': { id: 8, fname: "Amanda ", lname: "Taylor", email: "amanda@example.com", balance: 2200, rhistory: [] },
+            '9': { id: 9, fname: "Matthew ", lname: "Anderson", email: "matthew@example.com", balance: 1900, rhistory: [] },
+            '10': { id: 10, fname: "Jessica ", lname: "Thomas", email: "jessica@example.com", balance: 2800, rhistory: [] }
+        };
+        var trans_hist = {
+
+        }
+        $(document).ready(function () {
+            $("#transferForm").trigger("reset");
+            for (var i in customers) {
+                // showMsg(customers[i]);
+                current_option = "<option value=" + customers[i].id + ">" + customers[i].id + ". " + customers[i].fname + " " + customers[i].lname + "</option>";
+                $("#receiver-select").append(current_option);
+                $("#sender-select").append(current_option);
+            }
+            $("#receiver_details").hide();
+            $("#sender_details").hide();
+            // $("#exampleModal").hide();
+
+        });
+
+
+        function loaddetails_receiver() {
+
+
+            var current_user_id = $("#receiver-select").val();
+            if (current_user_id == '') {
+                $("#receiver_details").hide();
+            }
+            else {
+                $("#receiver_details").show();
+            }
+            for (var i in customers) {
+                if (customers[i].id == current_user_id) {
+                    $("#rfname").val(customers[i].fname);
+                    $("#rlname").val(customers[i].lname);
+                    $("#remail").val(customers[i].email);
+                    $("#rbalance").val(customers[i].balance);
+                }
+            }
+        }
+        function loaddetails_sender() {
+
+
+            var current_user_id = $("#sender-select").val();
+            if (current_user_id == '') {
+                $("#sender_details").hide();
+            }
+            else {
+                $("#sender_details").show();
+            }
+            for (var i in customers) {
+                if (customers[i].id == current_user_id) {
+                    $("#sfname").val(customers[i].fname);
+                    $("#slname").val(customers[i].lname);
+                    $("#semail").val(customers[i].email);
+                    $("#sbalance").val(customers[i].balance);
+                }
+            }
+
+
+
+        }
+        function transfer() {
+            var val_pass = validation();
+            if (val_pass) {
+                var sender_user_id = $("#sender-select").val();
+                var receiver_user_id = $("#receiver-select").val();
+                var sender_name;
+                var receiver_name;
+                var amount = parseInt($("#amt").val());
+                for (var i in customers) {
+                    if (customers[i].id == sender_user_id) {
+                        customers[i].balance -= amount;
+                        sender_name = customers[i].fname + " " + customers[i].lname;
+                    }
+                    else if (customers[i].id == receiver_user_id) {
+                        customers[i].balance += amount;
+                        receiver_name = customers[i].fname + " " + customers[i].lname;
+                    }
+                }
+                loaddetails_receiver(); loaddetails_sender();
+                var transTime = moment().format('DD-MMM-YYYY, HH:mm:ss');
+                transHistEntry(sender_name, receiver_name, amount, transTime);
+                showSuccess(sender_name, receiver_name, amount);
+            }
+            else {
+                return false;
+            }
+        }
+        function transHistEntry(sender_name, receiver_name, amount, transTime) {
+            var entry = "<tr><td>" + sender_name + "</td><td>" + amount + "</td><td>" + receiver_name + "</td><td>" + transTime + "</td></tr>";
+            tableBody = $("#transHistTable tbody");
+            tableBody.append(entry);
+        }
+
+        function validation() {
+            var current_user_id1 = $("#sender-select").val();
+            var current_balance1 = $("#sbalance").val();
+            var current_user_id2 = $("#receiver-select").val();
+            // var current_user_id2 = $("#receiver-select").val();
+            var amount = $("#amt").val();
+            if (current_user_id1 == '') {
+                showMsg("Please select a sender."); return false;
+            }
+            else if (current_user_id2 == '') {
+                showMsg("Please select a receiver."); return false;
+
+            }
+            else if (current_user_id1 == current_user_id2) {
+                showMsg("Sender and Receiver cannot be same."); return false;
+
+            }
+            else if (current_balance1 < parseInt(amount)) {
+                showMsg("Balance insufficient!!"); return false;
+            }
+            // else if (current_user_id2.balance <= amount) {
+            //     showMsg("Balance limit"); return false;
+
+            // }
+            else {
+                return true;
+            }
+
+        }
+        $('#exampleModal , #successModal').on('shown.bs.modal', function () {
+            $('#myInput').trigger('focus')
+        })
+        function showMsg(msg) {
+            $("#modal_msg").text(msg);
+            $('#exampleModal').modal('show');
+        }
+        function showSuccess(sender_name, receiver_name, amount) {
+            $("#success_modal_amount").text(amount);
+            $("#success_msg_sender").text(sender_name);
+            $("#success_msg_receiver").text(receiver_name);
+            $('#successModal').modal('show');
+        }
+        function showTransactionHistory() {
+            $('#transHistModal').modal('show');
+            // var table = new DataTable("#transHistTable");
+        }
+
+
+
+
+    </script>
+    <style>
+        body {
+            background-color: #020b19;
+            /* opacity: 0.5; */
+            height: 100%;
+            background-position-y: 30%;
+            /* Center the image */
+            background-repeat: no-repeat;
+            /* Do not repeat the image */
+            background-size: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="transferForm" onsubmit="return false;">
+        <div id="form_body" class="mx-auto rounded-2 mt-5" style="width: 80%;">
+            <div class="row">
+                <div class="col-5 bg-primary-subtle p-2 rounded-2" id="sendercol">
+                    <h1>Sender side</h1>
+                    <select class="form-select" aria-label="Default select example" id="sender-select"
+                        onchange="loaddetails_sender()">
+                        "<option value="" selected></option>"
+                    </select>
+                    <div id="sender_details">
+                        <div class="row ">
+                            <div class="col">
+                                <label for="fname" class="form-label">First Name</label>
+                                <input type="text" alt="fname" id="sfname" name="fname" class="form-control place"
+                                    placeholder="First Name" disabled>
+                            </div>
+                            <div class="col">
+                                <label for="lname" class="form-label">Last Name</label>
+                                <input type="text" alt="lname" id="slname" name="lname" class="form-control"
+                                    placeholder="Last Name" disabled>
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col">
+                                <label for="email" class="form-label">Email ID</label>
+                                <input type="email" alt="email" id="semail" name="email" class="form-control"
+                                    placeholder="Email ID" disabled>
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col">
+                                <label for="balance" class="form-label">Balance</label>
+                                <input type="balance" alt="balance" id="sbalance" name="balance" class="form-control"
+                                    placeholder="Balance" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-2"></div>
+                <div class="col-5 bg-secondary p-2 rounded-2" id="receivercol">
+                    <h1>Receiver side</h1>
+                    <select class="form-select" aria-label="Default select example" id="receiver-select"
+                        onchange="loaddetails_receiver()">
+                        "<option value="" selected></option>"
+                    </select>
+                    <div id="receiver_details">
+                        <div class="row ">
+                            <div class="col">
+                                <label for="fname" class="form-label">First Name</label>
+                                <input type="text" alt="fname" id="rfname" name="fname" class="form-control place"
+                                    placeholder="First Name" disabled>
+                            </div>
+                            <div class="col">
+                                <label for="lname" class="form-label">Last Name</label>
+                                <input type="text" alt="lname" id="rlname" name="lname" class="form-control"
+                                    placeholder="Last Name" disabled>
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col">
+                                <label for="email" class="form-label">Email ID</label>
+                                <input type="email" alt="email" id="remail" name="email" class="form-control"
+                                    placeholder="Email ID" disabled>
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col">
+                                <label for="balance" class="form-label">Balance</label>
+                                <input type="balance" alt="balance" id="rbalance" name="balance" class="form-control"
+                                    placeholder="Balance" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-3">
+
+                </div>
+                <div class="col-3">
+                    <div class="amount">
+                        <!-- <label for="transfer" class="trans">
+                            <h5> Amount to transfer:</h5>
+                        </label> -->
+                        <input alt="amount" id="amt" name="amot " class="mx-auto form-control"
+                            placeholder="Enter amount to transfer">
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="button-group m-auto">
+                        <button class="btn btn-primary m-auto" value="Transfer >>>" onclick="transfer()"
+                            id="valid">Transfer
+                            >>></button>
+                        <!-- <input type="reset" class="btn btn-danger" value="Reset"> -->
+                    </div>
+                </div>
+                <div class="col-3">
+                    <button class="btn btn-secondary m-auto" value="" onclick="showTransactionHistory()"
+                        id="transHistBtn">Show Transaction History</button>
+                </div>
+            </div>
+
+
+
+
+
+        </div>
+    </form>
+    <!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        Launch demo modal
+    </button> -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger">
+                    <h5 class="modal-title font-weight-bold text-white" id="exampleModalLabel">Error</h5>
+                    <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button> -->
+                </div>
+                <div class="modal-body">
+                    <Span id="modal_msg"></Span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                        onclick="$('#exampleModal').modal('hide')">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title font-weight-bold text-white" id="successModalLabel">
+                        Transaction Successful!
+                    </h5>
+                    <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button> -->
+                </div>
+                <div class="modal-body">
+                    <Span id="success_modal_msg">
+                        ₹<span id="success_modal_amount" class="bg-warning-subtle"></span> has been successfully
+                        transferred
+                        from <span class="bg-success-subtle" id="success_msg_sender"></span> to <span
+                            class="bg-success-subtle" id="success_msg_receiver"></span>
+                    </Span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                        onclick="$('#successModal').modal('hide')">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="transHistModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title font-weight-bold " id="transHistModalLabel">
+                        Transaction History
+                    </h5>
+                    <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button> -->
+                </div>
+                <div class="modal-body">
+                    <table id="transHistTable" class="table">
+                        <thead>
+                            <tr>
+                                <th>Sender</th>
+                                <th>Amount</th>
+                                <th>Receiver</th>
+                                <th>Transaction Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                        onclick="$('#transHistModal').modal('hide')">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
